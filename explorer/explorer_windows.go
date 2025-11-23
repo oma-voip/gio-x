@@ -149,11 +149,19 @@ func (e *Explorer) importFiles(extensions ...string) ([]io.ReadCloser, error) {
 		}
 	}
 
-	// The first element is the directory, append it to each filename
-	dir := paths[0]
-	filePaths := make([]string, len(paths)-1)
-	for i, file := range paths[1:] {
-		filePaths[i] = filepath.Join(dir, file)
+	var filePaths []string
+
+	// https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-openfilenamew lpstrFile.
+	// If the user selects only one file, the lpstrFile string does not have a separator between the path and file name.
+	if len(paths) == 1 {
+		filePaths = paths
+	} else {
+		// If the OFN_ALLOWMULTISELECT flag is set and the user selects multiple files, the buffer contains the current directory followed by the file names of the selected files.
+		dir := paths[0]
+		filePaths := make([]string, len(paths)-1)
+		for i, file := range paths[1:] {
+			filePaths[i] = filepath.Join(dir, file)
+		}
 	}
 
 	if len(filePaths) == 0 {
